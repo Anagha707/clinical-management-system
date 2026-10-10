@@ -325,23 +325,6 @@ function DoctorAppointments() {
                         </button>
 
 
-                        <button
-                            type="button"
-                            className={
-                                !showTodayOnly
-                                    ? "doctor-appointment-filter active"
-                                    : "doctor-appointment-filter"
-                            }
-                            onClick={() =>
-                                setShowTodayOnly(false)
-                            }
-                        >
-
-                            <Users size={15} />
-
-                            All
-
-                        </button>
 
                     </div>
 

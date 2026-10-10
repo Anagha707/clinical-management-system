@@ -10,24 +10,36 @@ function Sales() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    // =========================================================
+    // LOAD SALES
+    // =========================================================
+
     const loadSales = async () => {
         try {
             setLoading(true);
             setError("");
 
-            const data = await getLabSales();
+            const response = await getLabSales();
 
-            setSales(
-                Array.isArray(data)
-                    ? data
-                    : data.results || []
-            );
+            const data =
+                Array.isArray(response)
+                    ? response
+                    : Array.isArray(response?.data)
+                        ? response.data
+                        : response?.data?.results ||
+                        response?.results ||
+                        [];
+
+            setSales(data);
 
         } catch (error) {
-            console.error(error);
+            console.error(
+                "Error loading laboratory sales:",
+                error
+            );
 
             setError(
-                error.response?.data?.detail ||
+                error?.response?.data?.detail ||
                 "Unable to load laboratory sales."
             );
 
@@ -36,34 +48,66 @@ function Sales() {
         }
     };
 
+    // =========================================================
+    // LOAD ON PAGE OPEN
+    // =========================================================
+
     useEffect(() => {
         loadSales();
     }, []);
+
+    // =========================================================
+    // TOTAL SALES
+    // =========================================================
 
     const totalSales = sales.reduce(
         (sum, sale) =>
             sum +
             Number(
-                sale.total_amount || 0
+                sale?.total_amount || 0
             ),
         0
     );
 
+    // =========================================================
+    // PAID SALES
+    // Backend payment status = COMPLETED
+    // =========================================================
+
     const paidSales = sales
         .filter(
             (sale) =>
-                sale.payment_status === "PAID"
+                sale?.payment_status === "PAID"
+        ).reduce(
+            (sum, sale) =>
+                sum +
+                Number(
+                    sale?.total_amount || 0
+                ),
+            0
+        );
+
+    // =========================================================
+    // PENDING SALES
+    // =========================================================
+
+    const pendingSales = sales
+        .filter(
+            (sale) =>
+                sale?.payment_status !== "COMPLETED"
         )
         .reduce(
             (sum, sale) =>
                 sum +
                 Number(
-                    sale.total_amount || 0
+                    sale?.total_amount || 0
                 ),
             0
         );
 
-    const pendingSales = totalSales - paidSales;
+    // =========================================================
+    // LOADING
+    // =========================================================
 
     if (loading) {
         return (
@@ -75,8 +119,16 @@ function Sales() {
         );
     }
 
+    // =========================================================
+    // PAGE
+    // =========================================================
+
     return (
         <div className="laboratory-page">
+
+            {/* =================================================
+                PAGE HEADER
+            ================================================= */}
 
             <div className="page-header">
 
@@ -93,61 +145,106 @@ function Sales() {
 
             </div>
 
+            {/* =================================================
+                ERROR
+            ================================================= */}
+
             {error && (
                 <div className="alert alert-error">
                     {error}
                 </div>
             )}
 
+            {/* =================================================
+                STATISTICS
+            ================================================= */}
+
             <div className="stats-grid">
 
+                {/* TOTAL SALES */}
+
                 <div className="stat-card">
+
                     <div className="stat-content">
-                        <span>Total Sales</span>
+
+                        <span>
+                            Total Sales
+                        </span>
 
                         <strong>
                             ₹{totalSales.toFixed(2)}
                         </strong>
+
                     </div>
+
                 </div>
 
+                {/* PAID SALES */}
+
                 <div className="stat-card">
+
                     <div className="stat-content">
-                        <span>Paid Sales</span>
+
+                        <span>
+                            Paid Sales
+                        </span>
 
                         <strong>
                             ₹{paidSales.toFixed(2)}
                         </strong>
+
                     </div>
+
                 </div>
 
+                {/* PENDING */}
+
                 <div className="stat-card">
+
                     <div className="stat-content">
-                        <span>Pending</span>
+
+                        <span>
+                            Pending
+                        </span>
 
                         <strong>
                             ₹{pendingSales.toFixed(2)}
                         </strong>
+
                     </div>
+
                 </div>
 
+                {/* TRANSACTIONS */}
+
                 <div className="stat-card">
+
                     <div className="stat-content">
-                        <span>Transactions</span>
+
+                        <span>
+                            Transactions
+                        </span>
 
                         <strong>
                             {sales.length}
                         </strong>
+
                     </div>
+
                 </div>
 
             </div>
+
+            {/* =================================================
+                SALES TABLE
+            ================================================= */}
 
             <div className="content-card">
 
                 <div className="card-header">
 
                     <div>
+
                         <h2>
                             Sales Transactions
                         </h2>
@@ -156,6 +253,7 @@ function Sales() {
                             Laboratory bills generated
                             for completed tests.
                         </p>
+
                     </div>
 
                 </div>
@@ -165,6 +263,7 @@ function Sales() {
                     <table className="laboratory-table">
 
                         <thead>
+
                             <tr>
                                 <th>Bill ID</th>
                                 <th>Patient</th>
@@ -174,6 +273,7 @@ function Sales() {
                                 <th>Status</th>
                                 <th>Date</th>
                             </tr>
+
                         </thead>
 
                         <tbody>
@@ -181,80 +281,107 @@ function Sales() {
                             {sales.length === 0 ? (
 
                                 <tr>
+
                                     <td
                                         colSpan="7"
                                         className="empty-state"
                                     >
                                         No sales transactions found.
                                     </td>
+
                                 </tr>
 
                             ) : (
 
-                                sales.map((sale) => (
+                                sales.map((sale) => {
 
-                                    <tr key={sale.id}>
+                                    const isPaid =
+                                        sale?.payment_status ===
+                                        "COMPLETED";
 
-                                        <td>
-                                            <span className="request-id">
-                                                {sale.bill_id}
-                                            </span>
-                                        </td>
+                                    return (
+                                        <tr
+                                            key={sale?.id}
+                                        >
 
-                                        <td>
-                                            {
-                                                sale.patient_name ||
-                                                "N/A"
-                                            }
-                                        </td>
+                                            {/* BILL ID */}
 
-                                        <td>
-                                            {
-                                                sale.lab_request_id ||
-                                                "N/A"
-                                            }
-                                        </td>
+                                            <td>
 
-                                        <td>
-                                            {
-                                                sale.test_name ||
-                                                "N/A"
-                                            }
-                                        </td>
+                                                <span className="request-id">
+                                                    {sale?.bill_id || "—"}
+                                                </span>
 
-                                        <td>
-                                            ₹
-                                            {Number(
-                                                sale.total_amount || 0
-                                            ).toFixed(2)}
-                                        </td>
+                                            </td>
 
-                                        <td>
-                                            <span
-                                                className={`status ${
-                                                    sale.payment_status ===
-                                                    "PAID"
-                                                        ? "completed"
-                                                        : "pending"
-                                                }`}
-                                            >
+                                            {/* PATIENT */}
+
+                                            <td>
                                                 {
-                                                    sale.payment_status
+                                                    sale?.patient_name ||
+                                                    "N/A"
                                                 }
-                                            </span>
-                                        </td>
+                                            </td>
 
-                                        <td>
-                                            {sale.created_at
-                                                ? new Date(
-                                                      sale.created_at
-                                                  ).toLocaleDateString()
-                                                : "—"}
-                                        </td>
+                                            {/* REQUEST ID */}
 
-                                    </tr>
+                                            <td>
+                                                {
+                                                    sale?.lab_request_id ||
+                                                    "N/A"
+                                                }
+                                            </td>
 
-                                ))
+                                            {/* TEST */}
+
+                                            <td>
+                                                {
+                                                    sale?.test_name ||
+                                                    "N/A"
+                                                }
+                                            </td>
+
+                                            {/* AMOUNT */}
+
+                                            <td>
+                                                ₹
+                                                {Number(
+                                                    sale?.total_amount || 0
+                                                ).toFixed(2)}
+                                            </td>
+
+                                            {/* PAYMENT STATUS */}
+
+                                            <td>
+
+                                                <span
+                                                    className={`status ${isPaid
+                                                            ? "completed"
+                                                            : "pending"
+                                                        }`}
+                                                >
+                                                    {isPaid
+                                                        ? "COMPLETED"
+                                                        : "PENDING"}
+                                                </span>
+
+                                            </td>
+
+                                            {/* DATE */}
+
+                                            <td>
+
+                                                {sale?.created_at
+                                                    ? new Date(
+                                                        sale.created_at
+                                                    ).toLocaleDateString()
+                                                    : "—"}
+
+                                            </td>
+
+                                        </tr>
+                                    );
+                                })
 
                             )}
 

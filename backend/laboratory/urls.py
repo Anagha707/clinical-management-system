@@ -6,6 +6,7 @@ from .views import (
     LabPrescriptionSampleCollectionView,
     LabResultListCreateView,
     LabBillListCreateView,
+    LabBillPaymentView,
     LabSalesListView,
 )
 
@@ -60,6 +61,12 @@ urlpatterns = [
         "bills/",
         LabBillListCreateView.as_view(),
         name="lab-bills"
+    ),
+
+    path(
+        "bills/<int:bill_id>/pay/",
+        LabBillPaymentView.as_view(),
+        name="lab-bill-payment"
     ),
 
     # ========================================================

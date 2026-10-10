@@ -330,7 +330,7 @@ function ReceptionistDashboard() {
 
                     <div>
                         <span>
-                            Today's Appointments
+                                             Today's Appointments
                         </span>
 
                         <strong>

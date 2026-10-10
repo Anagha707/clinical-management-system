@@ -23,7 +23,7 @@ from .serializers import (
 class PatientListCreateView(APIView):
     permission_classes = [IsReceptionist]
 
-    def get(self, request):
+    def get(self):
 
         patients = Patient.objects.all().order_by("-id")
 

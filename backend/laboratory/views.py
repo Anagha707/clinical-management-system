@@ -81,35 +81,41 @@ class LabPrescriptionSampleCollectionView(APIView):
 
             return Response(
                 {
-                    "detail":
-                        "Laboratory prescription not found."
+                    "detail": "Laboratory prescription not found."
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        # -------------------------------------------------
         # Already completed
+        # -------------------------------------------------
+
         if prescription.status == "COMPLETED":
 
             return Response(
                 {
-                    "detail":
-                        "This laboratory test is already completed."
+                    "detail": "This laboratory test is already completed."
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # -------------------------------------------------
         # Already collected
+        # -------------------------------------------------
+
         if prescription.status == "SAMPLE_COLLECTED":
 
             return Response(
                 {
-                    "detail":
-                        "Sample has already been collected."
+                    "detail": "Sample has already been collected."
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # -------------------------------------------------
         # Lab test missing
+        # -------------------------------------------------
+
         if not prescription.lab_test_id:
 
             return Response(
@@ -119,6 +125,10 @@ class LabPrescriptionSampleCollectionView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # -------------------------------------------------
+        # Collect sample
+        # -------------------------------------------------
 
         prescription.status = "SAMPLE_COLLECTED"
 
@@ -472,6 +482,110 @@ class LabBillListCreateView(
             test_charge=test_charge,
             total_amount=total_amount,
             payment_status="PENDING",
+        )
+
+
+# =========================================================
+# LAB BILL PAYMENT
+# =========================================================
+
+class LabBillPaymentView(APIView):
+    permission_classes = [IsLabTechnician]
+
+    @transaction.atomic
+    def patch(self, request, bill_id):
+
+        # -------------------------------------------------
+        # Lock bill during payment
+        # -------------------------------------------------
+
+        try:
+
+            bill = (
+                LabBill.objects
+                .select_for_update()
+                .select_related(
+                    "patient",
+                    "lab_prescription",
+                    "lab_prescription__lab_test",
+                )
+                .get(id=bill_id)
+            )
+
+        except LabBill.DoesNotExist:
+
+            return Response(
+                {
+                    "detail":
+                        "Laboratory bill not found."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # -------------------------------------------------
+        # Already paid
+        # -------------------------------------------------
+
+        if bill.payment_status == "PAID":
+
+            return Response(
+                {
+                    "detail":
+                        "This laboratory bill has already been paid.",
+
+                    "bill_id":
+                        bill.bill_id,
+
+                    "payment_status":
+                        bill.payment_status,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # -------------------------------------------------
+        # Bill must be pending
+        # -------------------------------------------------
+
+        if bill.payment_status != "PENDING":
+
+            return Response(
+                {
+                    "detail":
+                        "This laboratory bill cannot be paid."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # -------------------------------------------------
+        # Complete payment
+        # -------------------------------------------------
+
+        bill.payment_status = "PAID"
+
+        bill.save(
+            update_fields=[
+                "payment_status",
+            ]
+        )
+
+        return Response(
+            {
+                "message":
+                    "Laboratory bill payment completed successfully.",
+
+                "bill_id":
+                    bill.bill_id,
+
+                "patient":
+                    bill.patient.name,
+
+                "total_amount":
+                    str(bill.total_amount),
+
+                "payment_status":
+                    bill.payment_status,
+            },
+            status=status.HTTP_200_OK,
         )
 
 

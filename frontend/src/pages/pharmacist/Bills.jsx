@@ -9,6 +9,8 @@ import {
     CalendarDays,
     User,
     FileText,
+    Eye,
+    X,
 } from "lucide-react";
 
 import PharmacistLayout from "../../components/pharmacist/PharmacistLayout";
@@ -30,6 +32,8 @@ function Bills() {
 
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
+    const [selectedBill, setSelectedBill] = useState(null);
 
 
     // =====================================================
@@ -78,6 +82,21 @@ function Bills() {
 
 
     // =====================================================
+    // VIEW BILL
+    // =====================================================
+
+    const handleViewBill = (bill) => {
+        if (!bill) return;
+
+        clearMessages();
+        setSelectedBill(bill);
+    };
+
+    const closeBillModal = () => {
+        setSelectedBill(null);
+    };
+
+
     // PAYMENT
     // =====================================================
 
@@ -748,84 +767,62 @@ function Bills() {
 
                                                 <td>
 
-                                                    <span
-                                                        className={`pharmacist-status-badge ${getStatusClass(
-                                                            bill.payment_status
-                                                        )}`}
-                                                    >
-
-                                                        {isPaid ? (
-
-                                                            <>
-                                                                <CheckCircle
-                                                                    size={14}
-                                                                />
-
-                                                                Paid
-                                                            </>
-
-                                                        ) : (
-
-                                                            <>
-                                                                <Clock
-                                                                    size={14}
-                                                                />
-
-                                                                Pending
-                                                            </>
-
-                                                        )}
-
-                                                    </span>
-
-                                                </td>
-
-
-                                                {/* =====================================
-                                                    ACTION
-                                                ====================================== */}
-
-                                                <td>
-
-                                                    {isPaid ? (
-
-                                                        <span className="pharmacist-paid-label">
-
-                                                            <CheckCircle
-                                                                size={15}
-                                                            />
-
-                                                            Paid
-
-                                                        </span>
-
-                                                    ) : (
+                                                    <div className="pharmacist-bill-actions">
 
                                                         <button
                                                             type="button"
-                                                            className="pharmacist-primary-button pharmacist-small-button"
+                                                            className="pharmacist-view-button pharmacist-small-button"
                                                             onClick={() =>
-                                                                handlePayment(
+                                                                handleViewBill(
                                                                     bill
                                                                 )
                                                             }
-                                                            disabled={
-                                                                payingId !==
-                                                                null
-                                                            }
                                                         >
-
-                                                            <CheckCircle
-                                                                size={15}
-                                                            />
-
-                                                            {isPaying
-                                                                ? "Processing..."
-                                                                : "Mark Paid"}
-
+                                                            <Eye size={15} />
+                                                            View
                                                         </button>
 
-                                                    )}
+                                                        {isPaid ? (
+
+                                                            <span className="pharmacist-paid-label">
+
+                                                                <CheckCircle
+                                                                    size={15}
+                                                                />
+
+                                                                Paid
+
+                                                            </span>
+
+                                                        ) : (
+
+                                                            <button
+                                                                type="button"
+                                                                className="pharmacist-primary-button pharmacist-small-button"
+                                                                onClick={() =>
+                                                                    handlePayment(
+                                                                        bill
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    payingId !==
+                                                                    null
+                                                                }
+                                                            >
+
+                                                                <CheckCircle
+                                                                    size={15}
+                                                                />
+
+                                                                {isPaying
+                                                                    ? "Processing..."
+                                                                    : "Mark Paid"}
+
+                                                            </button>
+
+                                                        )}
+
+                                                    </div>
 
                                                 </td>
 
@@ -877,6 +874,205 @@ function Bills() {
                 )}
 
             </div>
+
+            {selectedBill && (
+                <div
+                    className="pharmacist-bill-modal-overlay"
+                    onClick={closeBillModal}
+                >
+                    <div
+                        className="pharmacist-bill-modal"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="pharmacist-bill-modal-header">
+                            <div>
+                                <div className="pharmacist-bill-modal-title">
+                                    <Receipt size={21} />
+                                    <h2>Pharmacy Bill</h2>
+                                </div>
+                                <p>Bill details and payment information</p>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="pharmacist-bill-modal-close"
+                                onClick={closeBillModal}
+                                aria-label="Close"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="pharmacist-bill-modal-body">
+
+                            <div className="pharmacist-bill-id-card">
+                                <span>Bill ID</span>
+                                <strong>
+                                    {selectedBill.bill_id || "-"}
+                                </strong>
+                            </div>
+
+                            <div className="pharmacist-bill-detail-section">
+                                <div className="pharmacist-bill-section-heading">
+                                    <User size={18} />
+                                    <div>
+                                        <h3>Patient Information</h3>
+                                        <p>Patient associated with this bill</p>
+                                    </div>
+                                </div>
+
+                                <div className="pharmacist-bill-detail-grid">
+                                    <div className="pharmacist-bill-detail-item">
+                                        <span>Patient Name</span>
+                                        <strong>
+                                            {selectedBill.patient_name || "-"}
+                                        </strong>
+                                    </div>
+
+                                    <div className="pharmacist-bill-detail-item">
+                                        <span>Patient ID</span>
+                                        <strong>
+                                            {selectedBill.patient_id || "-"}
+                                        </strong>
+                                    </div>
+
+                                    <div className="pharmacist-bill-detail-item">
+                                        <span>Appointment</span>
+                                        <strong>
+                                            {selectedBill.appointment || "-"}
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pharmacist-bill-detail-section">
+                                <div className="pharmacist-bill-section-heading">
+                                    <FileText size={18} />
+                                    <div>
+                                        <h3>Medicine Details</h3>
+                                        <p>Medicine and billing information</p>
+                                    </div>
+                                </div>
+
+                                <div className="pharmacist-bill-detail-grid">
+                                    <div className="pharmacist-bill-detail-item">
+                                        <span>Medicine</span>
+                                        <strong>
+                                            {selectedBill.medicine_name ||
+                                                selectedBill.medicine?.name ||
+                                                selectedBill.medicine ||
+                                                "-"}
+                                        </strong>
+                                    </div>
+
+                                    <div className="pharmacist-bill-detail-item">
+                                        <span>Quantity</span>
+                                        <strong>
+                                            {selectedBill.quantity ??
+                                                selectedBill.dispensed_quantity ??
+                                                "-"}
+                                        </strong>
+                                    </div>
+
+                                    <div className="pharmacist-bill-detail-item">
+                                        <span>Price Per Unit</span>
+                                        <strong>
+                                            ₹{" "}
+                                            {formatAmount(
+                                                selectedBill.price_per_unit ??
+                                                    selectedBill.unit_price ??
+                                                    0
+                                            )}
+                                        </strong>
+                                    </div>
+
+                                    <div className="pharmacist-bill-detail-item">
+                                        <span>Total Amount</span>
+                                        <strong className="pharmacist-bill-total">
+                                            ₹{" "}
+                                            {formatAmount(
+                                                selectedBill.total_amount
+                                            )}
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pharmacist-bill-detail-section">
+                                <div className="pharmacist-bill-section-heading">
+                                    <CheckCircle size={18} />
+                                    <div>
+                                        <h3>Payment Information</h3>
+                                        <p>Current payment status</p>
+                                    </div>
+                                </div>
+
+                                <div className="pharmacist-bill-payment-grid">
+                                    <div className="pharmacist-bill-detail-item">
+                                        <span>Payment Status</span>
+                                        <span
+                                            className={`pharmacist-status-badge ${getStatusClass(
+                                                selectedBill.payment_status
+                                            )}`}
+                                        >
+                                            {selectedBill.payment_status === "PAID" ? (
+                                                <>
+                                                    <CheckCircle size={14} />
+                                                    Paid
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Clock size={14} />
+                                                    Pending
+                                                </>
+                                            )}
+                                        </span>
+                                    </div>
+
+                                    <div className="pharmacist-bill-detail-item">
+                                        <span>Bill Date</span>
+                                        <strong>
+                                            {formatDate(selectedBill.created_at)}
+                                        </strong>
+                                    </div>
+
+                                    <div className="pharmacist-bill-detail-item">
+                                        <span>Bill Time</span>
+                                        <strong>
+                                            {formatTime(selectedBill.created_at)}
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pharmacist-bill-modal-footer">
+                            <button
+                                type="button"
+                                className="pharmacist-secondary-button"
+                                onClick={closeBillModal}
+                            >
+                                Close
+                            </button>
+
+                            {selectedBill.payment_status !== "PAID" && (
+                                <button
+                                    type="button"
+                                    className="pharmacist-primary-button"
+                                    onClick={() => {
+                                        closeBillModal();
+                                        handlePayment(selectedBill);
+                                    }}
+                                    disabled={payingId !== null}
+                                >
+                                    <CheckCircle size={16} />
+                                    Mark Paid
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </PharmacistLayout>
     );

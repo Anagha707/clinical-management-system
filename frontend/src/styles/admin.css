@@ -2812,3 +2812,19 @@
 .admin-modal .admin-form-actions > button:last-child:hover {
     background: #1d4ed8 !important;
 }
+
+/* ============================================================
+   MEDICINE DATE PICKER - FINAL OVERRIDE
+   Only required additions for Medicine manufacture/expiry dates
+   ============================================================ */
+
+.medicine-date-field { position: relative !important; width: 100% !important; }
+.medicine-date-field label { display: block !important; margin-bottom: 7px !important; }
+.medicine-date-field input[type="date"] { display:block !important; width:100% !important; height:42px !important; min-height:42px !important; padding:0 12px !important; border:1px solid #dbe2ee !important; border-radius:8px !important; background:#fff !important; color:#172033 !important; font-family:inherit !important; font-size:13px !important; outline:none !important; cursor:pointer !important; box-sizing:border-box !important; }
+.medicine-date-field input[type="date"]:hover { border-color:#94a3b8 !important; }
+.medicine-date-field input[type="date"]:focus { border-color:#2563eb !important; box-shadow:0 0 0 3px rgba(37,99,235,.10) !important; }
+.medicine-date-field input[type="date"]::-webkit-calendar-picker-indicator { display:block !important; width:18px !important; height:18px !important; margin-left:6px !important; cursor:pointer !important; opacity:.75 !important; }
+.medicine-date-field input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity:1 !important; }
+.medicine-date-field .date-help { display:block !important; margin-top:5px !important; color:#64748b !important; font-size:11px !important; line-height:1.4 !important; }
+.medicine-date-field .required { margin-left:3px !important; color:#dc2626 !important; }
+@media (max-width:700px) { .medicine-date-field input[type="date"] { height:44px !important; min-height:44px !important; } .medicine-date-field .date-help { font-size:10px !important; } }

@@ -8282,3 +8282,497 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         width: 100% !important;
     }
 }
+
+
+
+
+
+/* =========================================================
+   PHARMACY BILL - VIEW ACTIONS
+   ========================================================= */
+
+.pharmacist-bill-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.pharmacist-view-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    height: 34px;
+    min-width: 70px;
+    padding: 0 11px;
+
+    border: 1px solid #d6deeb;
+    border-radius: 7px;
+
+    background: #ffffff;
+    color: #334155;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.15s ease;
+}
+
+.pharmacist-view-button:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+.pharmacist-view-button:active {
+    transform: translateY(1px);
+}
+
+
+/* =========================================================
+   BILL DETAILS MODAL OVERLAY
+   ========================================================= */
+
+.pharmacist-bill-modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    background: rgba(15, 23, 42, 0.55);
+
+    z-index: 99999;
+
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   BILL DETAILS MODAL
+   ========================================================= */
+
+.pharmacist-bill-modal {
+    width: min(720px, 100%);
+
+    max-height: calc(100vh - 48px);
+
+    display: flex;
+    flex-direction: column;
+
+    background: #ffffff;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 20px 50px rgba(15, 23, 42, 0.22),
+        0 5px 18px rgba(15, 23, 42, 0.10);
+
+    overflow: hidden;
+
+    animation: pharmacistBillModalIn 0.18s ease-out;
+}
+
+@keyframes pharmacistBillModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+/* =========================================================
+   MODAL HEADER
+   ========================================================= */
+
+.pharmacist-bill-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 22px 24px;
+
+    border-bottom: 1px solid #e5eaf1;
+
+    background: #ffffff;
+}
+
+.pharmacist-bill-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pharmacist-bill-modal-title svg {
+    color: #2563eb;
+    flex-shrink: 0;
+}
+
+.pharmacist-bill-modal-title h2 {
+    margin: 0;
+
+    color: #172033;
+
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.pharmacist-bill-modal-header p {
+    margin: 5px 0 0 31px;
+
+    color: #718096;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+   ========================================================= */
+
+.pharmacist-bill-modal-close {
+    width: 36px;
+    height: 36px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border: 1px solid #dbe2ea;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #64748b;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.pharmacist-bill-modal-close:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+
+/* =========================================================
+   MODAL BODY
+   ========================================================= */
+
+.pharmacist-bill-modal-body {
+    flex: 1;
+
+    padding: 22px 24px;
+
+    overflow-y: auto;
+
+    background: #ffffff;
+}
+
+
+/* =========================================================
+   BILL ID CARD
+   ========================================================= */
+
+.pharmacist-bill-id-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 14px 16px;
+
+    margin-bottom: 18px;
+
+    background: #f8fafc;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+}
+
+.pharmacist-bill-id-card span {
+    color: #64748b;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pharmacist-bill-id-card strong {
+    color: #172033;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    letter-spacing: 0.2px;
+}
+
+
+/* =========================================================
+   DETAIL SECTION
+   ========================================================= */
+
+.pharmacist-bill-detail-section {
+    padding: 18px 0;
+
+    border-bottom: 1px solid #edf1f5;
+}
+
+.pharmacist-bill-detail-section:last-child {
+    border-bottom: none;
+}
+
+
+/* =========================================================
+   SECTION HEADING
+   ========================================================= */
+
+.pharmacist-bill-section-heading {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+}
+
+.pharmacist-bill-section-heading > svg {
+    margin-top: 2px;
+
+    color: #2563eb;
+
+    flex-shrink: 0;
+}
+
+.pharmacist-bill-section-heading h3 {
+    margin: 0;
+
+    color: #273449;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.pharmacist-bill-section-heading p {
+    margin: 3px 0 0;
+
+    color: #8491a5;
+
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   DETAIL GRID
+   ========================================================= */
+
+.pharmacist-bill-detail-grid {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 14px 18px;
+}
+
+.pharmacist-bill-detail-item {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+.pharmacist-bill-detail-item > span:first-child {
+    color: #718096;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.pharmacist-bill-detail-item > strong {
+    min-width: 0;
+
+    color: #1e293b;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   TOTAL AMOUNT
+   ========================================================= */
+
+.pharmacist-bill-total {
+    color: #2563eb !important;
+
+    font-size: 15px !important;
+}
+
+
+/* =========================================================
+   PAYMENT GRID
+   ========================================================= */
+
+.pharmacist-bill-payment-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(150px, 1.2fr)
+        minmax(120px, 1fr)
+        minmax(120px, 1fr);
+
+    gap: 18px;
+}
+
+
+/* =========================================================
+   MODAL FOOTER
+   ========================================================= */
+
+.pharmacist-bill-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding: 16px 24px;
+
+    border-top: 1px solid #e5eaf1;
+
+    background: #f8fafc;
+}
+
+.pharmacist-bill-modal-footer button {
+    min-height: 38px;
+}
+
+
+/* =========================================================
+   TABLE ACTION COLUMN
+   ========================================================= */
+
+.pharmacist-table th:last-child,
+.pharmacist-table td:last-child {
+    min-width: 170px;
+
+    text-align: center;
+}
+
+.pharmacist-table td:last-child {
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .pharmacist-bill-modal-overlay {
+        padding: 12px;
+        align-items: flex-start;
+    }
+
+    .pharmacist-bill-modal {
+        width: 100%;
+        max-height: calc(100vh - 24px);
+
+        margin-top: 12px;
+
+        border-radius: 12px;
+    }
+
+    .pharmacist-bill-modal-header {
+        padding: 18px;
+    }
+
+    .pharmacist-bill-modal-body {
+        padding: 18px;
+    }
+
+    .pharmacist-bill-modal-footer {
+        padding: 14px 18px;
+    }
+
+    .pharmacist-bill-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pharmacist-bill-payment-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .pharmacist-bill-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pharmacist-bill-actions button,
+    .pharmacist-bill-actions .pharmacist-paid-label {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .pharmacist-bill-modal-title h2 {
+        font-size: 17px;
+    }
+
+    .pharmacist-bill-modal-header p {
+        margin-left: 0;
+    }
+
+    .pharmacist-bill-id-card {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .pharmacist-bill-modal-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .pharmacist-bill-modal-footer button {
+        width: 100%;
+    }
+}

@@ -7,25 +7,49 @@ class Patient(models.Model):
         unique=True,
         blank=True
     )
+
     name = models.CharField(max_length=100)
+
     dob = models.DateField()
+
     gender = models.CharField(max_length=100)
+
     age = models.PositiveIntegerField()
+
     address = models.TextField()
-    phone = models.CharField(max_length=10, unique=True)
+
+    phone = models.CharField(
+        max_length=10,
+        unique=True
+    )
+
     blood_group = models.CharField(max_length=5)
-    status = models.CharField(max_length=20, default="Active")
+
+    status = models.CharField(
+        max_length=20,
+        default="Active"
+    )
 
     def save(self, *args, **kwargs):
         if not self.patient_id:
-            last_patient = Patient.objects.order_by("-id").first()
+            last_number = 0
 
-            if last_patient:
-                number = last_patient.id + 1
-            else:
-                number = 1
+            patients = Patient.objects.exclude(
+                patient_id__isnull=True
+            ).exclude(
+                patient_id=""
+            )
 
-            self.patient_id = f"PAT{number:03d}"
+            for patient in patients:
+                try:
+                    number = int(
+                        patient.patient_id.replace("PAT", "")
+                    )
+                    last_number = max(last_number, number)
+                except (ValueError, AttributeError):
+                    continue
+
+            self.patient_id = f"PAT{last_number + 1:03d}"
 
         super().save(*args, **kwargs)
 

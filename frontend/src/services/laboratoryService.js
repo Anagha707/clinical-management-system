@@ -49,3 +49,7 @@ export const createLabBill = (data) =>
 
 export const getLabSales = () =>
     api.get("/laboratory/sales/");
+
+
+export const payLabBill = (billId) =>
+    api.patch(`/laboratory/bills/${billId}/pay/`);

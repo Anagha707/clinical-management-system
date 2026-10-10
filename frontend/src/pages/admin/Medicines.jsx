@@ -55,6 +55,114 @@ const Medicines = () => {
 
 
     // ============================================================
+    // GET TODAY
+    // ============================================================
+
+    const getToday = () => {
+        const today = new Date();
+
+        const year = today.getFullYear();
+
+        const month = String(
+            today.getMonth() + 1
+        ).padStart(2, "0");
+
+        const day = String(
+            today.getDate()
+        ).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    };
+
+    // ============================================================
+    // OPEN NATIVE CALENDAR
+    // ============================================================
+
+    const openCalendar = (event) => {
+        const input = event.currentTarget;
+
+        if (typeof input.showPicker === "function") {
+            try {
+                input.showPicker();
+            } catch (error) {
+                // Browser may already have the picker open.
+            }
+        }
+    };
+
+
+    // ============================================================
+    // GET MINIMUM EXPIRY DATE
+    // ============================================================
+
+    const getMinimumExpiryDate = () => {
+
+        if (!form.manufacture_date) {
+            return getToday();
+        }
+
+        const manufactureDate =
+            new Date(
+                `${form.manufacture_date}T00:00:00`
+            );
+
+        manufactureDate.setDate(
+            manufactureDate.getDate() + 1
+        );
+
+        const year =
+            manufactureDate.getFullYear();
+
+        const month =
+            String(
+                manufactureDate.getMonth() + 1
+            ).padStart(2, "0");
+
+        const day =
+            String(
+                manufactureDate.getDate()
+            ).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    };
+
+
+    // ============================================================
+    // DATE VALIDATION
+    // ============================================================
+
+    const validateDates = () => {
+
+        const today = getToday();
+
+        // Manufacture date required
+        if (!form.manufacture_date) {
+            return "Manufacture date is required.";
+        }
+
+        // Expiry date required
+        if (!form.expiry_date) {
+            return "Expiry date is required.";
+        }
+
+        // Manufacture date cannot be future
+        if (form.manufacture_date > today) {
+            return "Manufacture date cannot be in the future.";
+        }
+
+        // Expiry date must be after manufacture date
+        if (
+            form.expiry_date <=
+            form.manufacture_date
+        ) {
+            return "Expiry date must be after the manufacture date.";
+        }
+
+        return "";
+    };
+
+
+    // ============================================================
     // LOAD MEDICINES
     // ============================================================
 
@@ -63,29 +171,35 @@ const Medicines = () => {
         try {
 
             setLoading(true);
+
             setError("");
 
-            const response = await getMedicines();
+            const response =
+                await getMedicines();
 
-            const data = Array.isArray(response.data)
-                ? response.data
-                : response.data?.results || [];
+            const data =
+                Array.isArray(response.data)
+                    ? response.data
+                    : response.data?.results || [];
+
 
             /*
-             * Only Active medicines are shown in the active
-             * medicine management list.
+             * Only Active medicines are shown.
              *
-             * If a used medicine is "deleted", the backend
-             * changes its status to Inactive. Therefore it
-             * disappears from this list while historical
-             * records remain safe.
+             * If a medicine is used in medical records,
+             * the backend changes its status to Inactive
+             * instead of physically deleting it.
+             *
+             * This keeps historical records safe.
              */
 
-            const activeMedicines = data.filter(
-                (medicine) =>
-                    !medicine.status ||
-                    medicine.status === "Active"
-            );
+            const activeMedicines =
+                data.filter(
+                    (medicine) =>
+                        !medicine.status ||
+                        medicine.status === "Active"
+                );
+
 
             setMedicines(activeMedicines);
 
@@ -96,7 +210,9 @@ const Medicines = () => {
                 error.response?.data || error
             );
 
-            const responseData = error.response?.data;
+            const responseData =
+                error.response?.data;
+
 
             if (
                 responseData &&
@@ -123,6 +239,10 @@ const Medicines = () => {
     };
 
 
+    // ============================================================
+    // INITIAL LOAD
+    // ============================================================
+
     useEffect(() => {
 
         loadMedicines();
@@ -141,10 +261,31 @@ const Medicines = () => {
             value,
         } = e.target;
 
+
         setForm((previous) => ({
             ...previous,
             [name]: value,
         }));
+
+
+        /*
+         * If manufacture date changes and the existing
+         * expiry date is no longer valid, clear expiry date.
+         */
+
+        if (
+            name === "manufacture_date" &&
+            form.expiry_date &&
+            value &&
+            form.expiry_date <= value
+        ) {
+
+            setForm((previous) => ({
+                ...previous,
+                [name]: value,
+                expiry_date: "",
+            }));
+        }
     };
 
 
@@ -164,6 +305,7 @@ const Medicines = () => {
             price_per_unit: "",
             stock_quantity: "",
         });
+
 
         setEditingId(null);
 
@@ -192,6 +334,7 @@ const Medicines = () => {
             stock_quantity: "",
         });
 
+
         setEditingId(null);
 
         setError("");
@@ -210,8 +353,11 @@ const Medicines = () => {
 
         setEditingId(medicine.id);
 
+
         setForm({
-            name: medicine.name || "",
+            name:
+                medicine.name ||
+                "",
 
             medicine_type:
                 medicine.medicine_type ||
@@ -245,6 +391,7 @@ const Medicines = () => {
                 "",
         });
 
+
         setError("");
 
         setMessage("");
@@ -261,31 +408,113 @@ const Medicines = () => {
 
         e.preventDefault();
 
-        setSaving(true);
 
+        // Clear old messages
         setError("");
 
         setMessage("");
+
+
+        // ========================================================
+        // BASIC FORM VALIDATION
+        // ========================================================
+
+        if (!form.name.trim()) {
+            setError("Medicine name is required.");
+            return;
+        }
+
+        if (!form.medicine_type.trim()) {
+            setError("Medicine type is required.");
+            return;
+        }
+
+        if (!form.manufacturer.trim()) {
+            setError("Manufacturer is required.");
+            return;
+        }
+
+        if (!form.batch_number.trim()) {
+            setError("Batch number is required.");
+            return;
+        }
+
+
+        // ========================================================
+        // DATE VALIDATION
+        // ========================================================
+
+        const dateError =
+            validateDates();
+
+
+        if (dateError) {
+
+            setError(dateError);
+
+            return;
+        }
+
+
+        // ========================================================
+        // PRICE VALIDATION
+        // ========================================================
+
+        if (
+            form.price_per_unit === "" ||
+            Number(form.price_per_unit) < 0
+        ) {
+
+            setError(
+                "Price per unit must be 0 or greater."
+            );
+
+            return;
+        }
+
+
+        // ========================================================
+        // STOCK VALIDATION
+        // ========================================================
+
+        if (
+            form.stock_quantity === "" ||
+            Number(form.stock_quantity) < 0
+        ) {
+
+            setError(
+                "Stock quantity must be 0 or greater."
+            );
+
+            return;
+        }
+
+
+        setSaving(true);
+
 
         try {
 
             /*
              * IMPORTANT:
              *
-             * Backend model field is:
+             * medicine_id is NOT included.
+             *
+             * Django generates medicine_id automatically.
+             *
+             * Backend model field:
              *
              * medicine_type
              *
              * NOT:
              *
              * type
-             *
-             * medicine_id is NOT included because Django
-             * generates it automatically.
              */
 
             const payload = {
-                name: form.name.trim(),
+
+                name:
+                    form.name.trim(),
 
                 medicine_type:
                     form.medicine_type.trim(),
@@ -297,10 +526,10 @@ const Medicines = () => {
                     form.batch_number.trim(),
 
                 manufacture_date:
-                    form.manufacture_date || null,
+                    form.manufacture_date,
 
                 expiry_date:
-                    form.expiry_date || null,
+                    form.expiry_date,
 
                 price_per_unit:
                     form.price_per_unit,
@@ -310,6 +539,10 @@ const Medicines = () => {
             };
 
 
+            // ====================================================
+            // UPDATE
+            // ====================================================
+
             if (editingId) {
 
                 await updateMedicine(
@@ -317,15 +550,23 @@ const Medicines = () => {
                     payload
                 );
 
+
                 setMessage(
                     "Medicine updated successfully."
                 );
 
-            } else {
+            }
+
+            // ====================================================
+            // CREATE
+            // ====================================================
+
+            else {
 
                 await createMedicine(
                     payload
                 );
+
 
                 setMessage(
                     "Medicine created successfully."
@@ -333,11 +574,21 @@ const Medicines = () => {
             }
 
 
+            // ====================================================
+            // RELOAD
+            // ====================================================
+
             await loadMedicines();
+
+
+            // ====================================================
+            // CLOSE FORM
+            // ====================================================
 
             setShowForm(false);
 
             setEditingId(null);
+
 
             setForm({
                 name: "",
@@ -350,6 +601,7 @@ const Medicines = () => {
                 stock_quantity: "",
             });
 
+
         } catch (error) {
 
             console.error(
@@ -357,8 +609,10 @@ const Medicines = () => {
                 error.response?.data || error
             );
 
+
             const responseData =
                 error.response?.data;
+
 
             if (
                 responseData &&
@@ -366,18 +620,27 @@ const Medicines = () => {
             ) {
 
                 const messageText =
-                    Object.entries(responseData)
-                        .map(([field, value]) => {
+                    Object.entries(
+                        responseData
+                    )
+                        .map(
+                            ([field, value]) => {
 
-                            if (Array.isArray(value)) {
+                                if (
+                                    Array.isArray(
+                                        value
+                                    )
+                                ) {
 
-                                return `${field}: ${value.join(", ")}`;
+                                    return `${field}: ${value.join(", ")}`;
+                                }
 
+
+                                return `${field}: ${value}`;
                             }
-
-                            return `${field}: ${value}`;
-                        })
+                        )
                         .join(" | ");
+
 
                 setError(
                     messageText ||
@@ -406,17 +669,20 @@ const Medicines = () => {
 
         const medicine =
             medicines.find(
-                (item) => item.id === id
+                (item) =>
+                    item.id === id
             );
+
 
         const medicineName =
             medicine?.name ||
             "this medicine";
 
 
-        const confirmed = window.confirm(
-            `Are you sure you want to delete ${medicineName}?`
-        );
+        const confirmed =
+            window.confirm(
+                `Are you sure you want to delete ${medicineName}?`
+            );
 
 
         if (!confirmed) {
@@ -439,11 +705,13 @@ const Medicines = () => {
              * 1. If medicine has no medical records:
              *    permanently deletes it.
              *
-             * 2. If medicine is used in prescriptions or
-             *    dispensing:
-             *    changes status to Inactive.
+             * 2. If medicine is already used in:
+             *    - prescriptions
+             *    - dispensing
              *
-             * In both cases, it should no longer appear in
+             *    backend changes status to Inactive.
+             *
+             * In both cases it should disappear from
              * the Active Medicines list.
              */
 
@@ -451,20 +719,22 @@ const Medicines = () => {
                 await deleteMedicine(id);
 
 
-            // ----------------------------------------------------
-            // Remove immediately from current UI.
-            // ----------------------------------------------------
+            // ====================================================
+            // REMOVE FROM CURRENT UI
+            // ====================================================
 
-            setMedicines((previous) =>
-                previous.filter(
-                    (item) => item.id !== id
-                )
+            setMedicines(
+                (previous) =>
+                    previous.filter(
+                        (item) =>
+                            item.id !== id
+                    )
             );
 
 
-            // ----------------------------------------------------
-            // Show backend message if available.
-            // ----------------------------------------------------
+            // ====================================================
+            // BACKEND MESSAGE
+            // ====================================================
 
             const backendMessage =
                 response?.data?.message;
@@ -476,9 +746,9 @@ const Medicines = () => {
             );
 
 
-            // ----------------------------------------------------
-            // Reload to make sure frontend matches backend.
-            // ----------------------------------------------------
+            // ====================================================
+            // RELOAD
+            // ====================================================
 
             await loadMedicines();
 
@@ -500,13 +770,17 @@ const Medicines = () => {
                 typeof responseData === "object"
             ) {
 
-                if (responseData.message) {
+                if (
+                    responseData.message
+                ) {
 
                     setError(
                         responseData.message
                     );
 
-                } else if (responseData.detail) {
+                } else if (
+                    responseData.detail
+                ) {
 
                     setError(
                         responseData.detail
@@ -515,18 +789,27 @@ const Medicines = () => {
                 } else {
 
                     const messageText =
-                        Object.entries(responseData)
-                            .map(([field, value]) => {
+                        Object.entries(
+                            responseData
+                        )
+                            .map(
+                                ([field, value]) => {
 
-                                if (Array.isArray(value)) {
+                                    if (
+                                        Array.isArray(
+                                            value
+                                        )
+                                    ) {
 
-                                    return `${field}: ${value.join(", ")}`;
+                                        return `${field}: ${value.join(", ")}`;
+                                    }
 
+
+                                    return `${field}: ${value}`;
                                 }
-
-                                return `${field}: ${value}`;
-                            })
+                            )
                             .join(" | ");
+
 
                     setError(
                         messageText ||
@@ -553,49 +836,65 @@ const Medicines = () => {
     // ============================================================
 
     const searchText =
-        search.trim().toLowerCase();
+        search
+            .trim()
+            .toLowerCase();
 
 
     const filteredMedicines =
-        medicines.filter((medicine) => {
+        medicines.filter(
+            (medicine) => {
 
-            return (
+                return (
 
-                medicine.name
-                    ?.toLowerCase()
-                    .includes(searchText)
+                    medicine.name
+                        ?.toLowerCase()
+                        .includes(
+                            searchText
+                        )
 
-                ||
+                    ||
 
-                medicine.medicine_id
-                    ?.toLowerCase()
-                    .includes(searchText)
+                    medicine.medicine_id
+                        ?.toLowerCase()
+                        .includes(
+                            searchText
+                        )
 
-                ||
+                    ||
 
-                medicine.medicine_type
-                    ?.toLowerCase()
-                    .includes(searchText)
+                    medicine.medicine_type
+                        ?.toLowerCase()
+                        .includes(
+                            searchText
+                        )
 
-                ||
+                    ||
 
-                medicine.type
-                    ?.toLowerCase()
-                    .includes(searchText)
+                    medicine.type
+                        ?.toLowerCase()
+                        .includes(
+                            searchText
+                        )
 
-                ||
+                    ||
 
-                medicine.manufacturer
-                    ?.toLowerCase()
-                    .includes(searchText)
+                    medicine.manufacturer
+                        ?.toLowerCase()
+                        .includes(
+                            searchText
+                        )
 
-                ||
+                    ||
 
-                medicine.batch_number
-                    ?.toLowerCase()
-                    .includes(searchText)
-            );
-        });
+                    medicine.batch_number
+                        ?.toLowerCase()
+                        .includes(
+                            searchText
+                        )
+                );
+            }
+        );
 
 
     // ============================================================
@@ -693,7 +992,9 @@ const Medicines = () => {
                             placeholder="Search medicine..."
                             value={search}
                             onChange={(e) =>
-                                setSearch(e.target.value)
+                                setSearch(
+                                    e.target.value
+                                )
                             }
                         />
 
@@ -715,7 +1016,6 @@ const Medicines = () => {
                     </div>
 
                 ) : (
-
 
                     <div className="admin-table-wrapper">
 
@@ -772,7 +1072,6 @@ const Medicines = () => {
 
                             <tbody>
 
-
                                 {filteredMedicines.length === 0 ? (
 
                                     <tr>
@@ -790,14 +1089,14 @@ const Medicines = () => {
 
                                 ) : (
 
-
                                     filteredMedicines.map(
                                         (medicine, index) => (
 
                                             <tr
-                                                key={medicine.id}
+                                                key={
+                                                    medicine.id
+                                                }
                                             >
-
 
                                                 {/* NUMBER */}
 
@@ -813,7 +1112,9 @@ const Medicines = () => {
                                                 <td>
 
                                                     <strong>
-                                                        {medicine.medicine_id}
+                                                        {
+                                                            medicine.medicine_id
+                                                        }
                                                     </strong>
 
                                                 </td>
@@ -823,7 +1124,9 @@ const Medicines = () => {
 
                                                 <td>
 
-                                                    {medicine.name}
+                                                    {
+                                                        medicine.name
+                                                    }
 
                                                 </td>
 
@@ -832,9 +1135,11 @@ const Medicines = () => {
 
                                                 <td>
 
-                                                    {medicine.medicine_type ||
+                                                    {
+                                                        medicine.medicine_type ||
                                                         medicine.type ||
-                                                        "-"}
+                                                        "-"
+                                                    }
 
                                                 </td>
 
@@ -843,8 +1148,10 @@ const Medicines = () => {
 
                                                 <td>
 
-                                                    {medicine.manufacturer ||
-                                                        "-"}
+                                                    {
+                                                        medicine.manufacturer ||
+                                                        "-"
+                                                    }
 
                                                 </td>
 
@@ -853,9 +1160,11 @@ const Medicines = () => {
 
                                                 <td>
 
-                                                    {medicine.batch_number ||
+                                                    {
+                                                        medicine.batch_number ||
                                                         medicine.batch_no ||
-                                                        "-"}
+                                                        "-"
+                                                    }
 
                                                 </td>
 
@@ -864,9 +1173,11 @@ const Medicines = () => {
 
                                                 <td>
 
-                                                    {medicine.stock_quantity ??
+                                                    {
+                                                        medicine.stock_quantity ??
                                                         medicine.stock_qty ??
-                                                        0}
+                                                        0
+                                                    }
 
                                                 </td>
 
@@ -876,8 +1187,10 @@ const Medicines = () => {
                                                 <td>
 
                                                     ₹
-                                                    {medicine.price_per_unit ??
-                                                        "0.00"}
+                                                    {
+                                                        medicine.price_per_unit ??
+                                                        "0.00"
+                                                    }
 
                                                 </td>
 
@@ -886,8 +1199,10 @@ const Medicines = () => {
 
                                                 <td>
 
-                                                    {medicine.expiry_date ||
-                                                        "-"}
+                                                    {
+                                                        medicine.expiry_date ||
+                                                        "-"
+                                                    }
 
                                                 </td>
 
@@ -1047,8 +1362,12 @@ const Medicines = () => {
                                     <input
                                         type="text"
                                         name="name"
-                                        value={form.name}
-                                        onChange={handleChange}
+                                        value={
+                                            form.name
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
                                         placeholder="Enter medicine name"
                                         required
                                     />
@@ -1069,8 +1388,12 @@ const Medicines = () => {
                                     <input
                                         type="text"
                                         name="medicine_type"
-                                        value={form.medicine_type}
-                                        onChange={handleChange}
+                                        value={
+                                            form.medicine_type
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
                                         placeholder="Tablet / Capsule / Syrup"
                                         required
                                     />
@@ -1091,8 +1414,12 @@ const Medicines = () => {
                                     <input
                                         type="text"
                                         name="manufacturer"
-                                        value={form.manufacturer}
-                                        onChange={handleChange}
+                                        value={
+                                            form.manufacturer
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
                                         placeholder="Enter manufacturer"
                                         required
                                     />
@@ -1113,8 +1440,12 @@ const Medicines = () => {
                                     <input
                                         type="text"
                                         name="batch_number"
-                                        value={form.batch_number}
-                                        onChange={handleChange}
+                                        value={
+                                            form.batch_number
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
                                         placeholder="Enter batch number"
                                         required
                                     />
@@ -1133,12 +1464,27 @@ const Medicines = () => {
                                     </label>
 
                                     <input
+                                        className="medicine-date-input"
                                         type="date"
                                         name="manufacture_date"
-                                        value={form.manufacture_date}
-                                        onChange={handleChange}
+                                        value={
+                                            form.manufacture_date
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
+                                        onClick={
+                                            openCalendar
+                                        }
+                                        max={
+                                            getToday()
+                                        }
                                         required
                                     />
+
+                                    <small className="admin-form-hint">
+                                        Manufacture date cannot be in the future.
+                                    </small>
 
                                 </div>
 
@@ -1154,12 +1500,27 @@ const Medicines = () => {
                                     </label>
 
                                     <input
+                                        className="medicine-date-input"
                                         type="date"
                                         name="expiry_date"
-                                        value={form.expiry_date}
-                                        onChange={handleChange}
+                                        value={
+                                            form.expiry_date
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
+                                        onClick={
+                                            openCalendar
+                                        }
+                                        min={
+                                            getMinimumExpiryDate()
+                                        }
                                         required
                                     />
+
+                                    <small className="admin-form-hint">
+                                        Expiry date must be after the manufacture date.
+                                    </small>
 
                                 </div>
 
@@ -1177,8 +1538,12 @@ const Medicines = () => {
                                     <input
                                         type="number"
                                         name="price_per_unit"
-                                        value={form.price_per_unit}
-                                        onChange={handleChange}
+                                        value={
+                                            form.price_per_unit
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
                                         min="0"
                                         step="0.01"
                                         placeholder="0.00"
@@ -1201,9 +1566,14 @@ const Medicines = () => {
                                     <input
                                         type="number"
                                         name="stock_quantity"
-                                        value={form.stock_quantity}
-                                        onChange={handleChange}
+                                        value={
+                                            form.stock_quantity
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
                                         min="0"
+                                        step="1"
                                         placeholder="Enter quantity"
                                         required
                                     />
@@ -1224,8 +1594,12 @@ const Medicines = () => {
                                 <button
                                     type="button"
                                     className="admin-secondary-button"
-                                    onClick={resetForm}
-                                    disabled={saving}
+                                    onClick={
+                                        resetForm
+                                    }
+                                    disabled={
+                                        saving
+                                    }
                                 >
 
                                     Cancel
@@ -1236,7 +1610,9 @@ const Medicines = () => {
                                 <button
                                     type="submit"
                                     className="admin-primary-button"
-                                    disabled={saving}
+                                    disabled={
+                                        saving
+                                    }
                                 >
 
                                     {saving
